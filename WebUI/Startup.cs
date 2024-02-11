@@ -8,6 +8,7 @@ using ProgrammersBlog.Data.Contexts;
 using ProgrammersBlog.Entities.Concrete;
 using ProgrammersBlog.Services.Extensions;
 using ProgrammersBlog.Services.Mapper.AutoMapper;
+using ProgrammersBlog.Shared.Helpers.Image;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,7 +38,8 @@ namespace WebUI
             });
             services.AddSession();
             services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile));
-            services.LoadMyServices();
+            services.LoadMyServices(Configuration.GetConnectionString("localDb"));
+            services.AddScoped<IImageHelper, ImageHelper>();
             services.AddIdentity<User, Role>(options =>
             {
                 // User Password Options

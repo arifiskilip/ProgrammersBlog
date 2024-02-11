@@ -10,5 +10,6 @@ namespace ProgrammersBlog.Data.Concrete
         public CategoryRepository(DbContext context) : base(context)
         {
         }
+
     }
 }

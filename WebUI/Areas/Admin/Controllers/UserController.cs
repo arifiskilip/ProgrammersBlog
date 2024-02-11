@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using ProgrammersBlog.Entities.Concrete;
 using ProgrammersBlog.Entities.Dtos;
 using ProgrammersBlog.Services.Extensions;
+using ProgrammersBlog.Shared.Helpers.Image;
 using ProgrammersBlog.Shared.Results;
 using System;
 using System.IO;
@@ -26,13 +27,15 @@ namespace WebUI.Areas.Admin.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IWebHostEnvironment _env;
         private readonly IMapper _mapper;
+        private readonly IImageHelper _imageHelper;
 
-        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, IWebHostEnvironment env, IMapper mapper)
+        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, IWebHostEnvironment env, IMapper mapper, IImageHelper imageHelper)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _env = env;
             _mapper = mapper;
+            _imageHelper = imageHelper;
         }
 
         [Authorize(Roles ="Admin")]
@@ -114,7 +117,8 @@ namespace WebUI.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                userAddDto.Picture = await ImageUpload(userAddDto.UserName, userAddDto.PictureFile);
+                var imageResult = await _imageHelper.UploadImage(userAddDto.UserName, userAddDto.PictureFile);
+                userAddDto.Picture = imageResult.ResultStatus == ResultStatus.Success ? imageResult.Data.FullName : "userImages/default.png";
                 var user = _mapper.Map<User>(userAddDto);
                 var result = await _userManager.CreateAsync(user, userAddDto.Password);
                 if (result.Succeeded)
@@ -212,7 +216,8 @@ namespace WebUI.Areas.Admin.Controllers
                 var oldUserPicture = oldUser.Picture;
                 if (userUpdateDto.PictureFile != null)
                 {
-                    userUpdateDto.Picture = await ImageUpload(userUpdateDto.UserName, userUpdateDto.PictureFile);
+                    var imageResult = await _imageHelper.UploadImage(userUpdateDto.UserName, userUpdateDto.PictureFile);
+                    userUpdateDto.Picture = imageResult.Data.FullName;
                     isNewPictureUploaded = true;
                 }
 
@@ -222,7 +227,7 @@ namespace WebUI.Areas.Admin.Controllers
                 {
                     if (isNewPictureUploaded)
                     {
-                        ImageDelete(oldUserPicture); //Eski resmi sil
+                        _imageHelper.DeleteImage(oldUserPicture); //Eski resmi sil
                     }
 
                     var userUpdateViewModel = JsonSerializer.Serialize(new UserUpdateAjaxModel
@@ -283,7 +288,8 @@ namespace WebUI.Areas.Admin.Controllers
                 var oldUserPicture = oldUser.Picture;
                 if (userUpdateDto.PictureFile != null)
                 {
-                    userUpdateDto.Picture = await ImageUpload(userUpdateDto.UserName, userUpdateDto.PictureFile);
+                    var imageResult = await _imageHelper.UploadImage(userUpdateDto.UserName, userUpdateDto.PictureFile);
+                    userUpdateDto.Picture = imageResult.Data.FullName;
                     if (oldUserPicture != "defaultUser.png")
                     {
                         isNewPictureUploaded = true;
@@ -297,7 +303,7 @@ namespace WebUI.Areas.Admin.Controllers
                 {
                     if (isNewPictureUploaded)
                     {
-                        ImageDelete(oldUserPicture);
+                        _imageHelper.DeleteImage(oldUserPicture);
                     }
                     TempData.Add("SuccessMessage", $"{updatedUser.UserName} adlı kullanıcı başarıyla güncellenmiştir.");
                     return View(userUpdateDto);
@@ -344,6 +350,14 @@ namespace WebUI.Areas.Admin.Controllers
                         TempData.Add("SuccessMessage", $"Şifreniz başarıyla değiştirilmiştir.");
                         return View();
                     }
+                    else
+                    {
+                        foreach (var err in result.Errors)
+                        {
+                            ModelState.AddModelError("", err.Description);
+                        }
+                        return View(userPasswordChangeDto);
+                    }
                 }
                 else
                 {
@@ -357,41 +371,6 @@ namespace WebUI.Areas.Admin.Controllers
             }
 
             return View();
-        }
-
-        // Tools
-
-        [Authorize(Roles = "Admin,Editor")]
-        public async Task<string> ImageUpload(string userName, IFormFile pictureFile)
-        {
-            // ~/img/user.Picture
-            string wwwroot = _env.WebRootPath;
-            string fileExtension = Path.GetExtension(pictureFile.FileName); //.png .jpg .jpeg
-            DateTime dateTime = DateTime.Now;
-            // Arifİskilip_587_5_38_12_3_10_2020.png
-            string fileName = $"{userName}_{dateTime.FullDateAndTimeStringWithUnderscore()}{fileExtension}";
-            var path = Path.Combine($"{wwwroot}/img", fileName);
-            await using (var stream = new FileStream(path, FileMode.Create))
-            {
-                await pictureFile.CopyToAsync(stream);
-            }
-
-            return fileName; // Arifİskilip_587_5_38_12_3_10_2020.png - "~/img/user.Picture"
-        }
-        [Authorize(Roles = "Admin,Editor")]
-        public bool ImageDelete(string pictureName)
-        {
-            string wwwroot = _env.WebRootPath;
-            var fileToDelete = Path.Combine($"{wwwroot}/img", pictureName);
-            if (System.IO.File.Exists(fileToDelete))
-            {
-                System.IO.File.Delete(fileToDelete);
-                return true;
-            }
-            else
-            {
-                return false;
-            }
         }
     }
 }

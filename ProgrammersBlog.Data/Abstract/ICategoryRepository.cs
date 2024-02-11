@@ -5,5 +5,6 @@ namespace ProgrammersBlog.Data.Abstract
 {
     public interface ICategoryRepository : IGenericRepository<Category>
     {
+       
     }
 }

@@ -10,11 +10,12 @@ namespace ProgrammersBlog.Data.Contexts
         public DbSet<Article> Articles { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Comment> Comments { get; set; }
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+
+        public ProgrammersBlogContext(DbContextOptions<ProgrammersBlogContext> context):base(context)
         {
-            optionsBuilder.UseSqlServer(
-                @"Data Source=(localdb)\MSSQLLocalDB;Initial Catalog=ProgrammersBlogDb;Integrated Security=True;Connect Timeout=30;Encrypt=False;Trust Server Certificate=False;Application Intent=ReadWrite;Multi Subnet Failover=False");
+            
         }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.ApplyConfiguration(new ArticleMap());
