@@ -7,11 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using ProgrammersBlog.Entities.Concrete;
 using ProgrammersBlog.Entities.Dtos;
-using ProgrammersBlog.Services.Extensions;
 using ProgrammersBlog.Shared.Helpers.Image;
 using ProgrammersBlog.Shared.Results;
-using System;
-using System.IO;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -21,18 +18,14 @@ using WebUI.Extensions;
 namespace WebUI.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    public class UserController : Controller
+    public class UserController : BaseController
     {
-        private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
         private readonly IWebHostEnvironment _env;
         private readonly IMapper _mapper;
         private readonly IImageHelper _imageHelper;
 
-        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, IWebHostEnvironment env, IMapper mapper, IImageHelper imageHelper)
+        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, IWebHostEnvironment env, IMapper mapper, IImageHelper imageHelper, RoleManager<Role> roleManager) : base(userManager,signInManager, roleManager)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
             _env = env;
             _mapper = mapper;
             _imageHelper = imageHelper;
@@ -117,7 +110,7 @@ namespace WebUI.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var imageResult = await _imageHelper.UploadImage(userAddDto.UserName, userAddDto.PictureFile);
+                var imageResult = await _imageHelper.UploadImageAsync(userAddDto.UserName, userAddDto.PictureFile);
                 userAddDto.Picture = imageResult.ResultStatus == ResultStatus.Success ? imageResult.Data.FullName : "userImages/default.png";
                 var user = _mapper.Map<User>(userAddDto);
                 var result = await _userManager.CreateAsync(user, userAddDto.Password);
@@ -133,10 +126,7 @@ namespace WebUI.Areas.Admin.Controllers
                 }
                 else
                 {
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError("", error.Description);
-                    }
+                    this.AddModelErrors(result);
                     var userAddErrorAjaxModel = JsonSerializer.Serialize(new UserAddAjaxModel
                     {
                         UserAddPartial = await this.RenderViewToStringAsync("_UserAddPartial",userAddDto),
@@ -180,10 +170,7 @@ namespace WebUI.Areas.Admin.Controllers
             else
             {
                 string errorMessage = string.Empty;
-                foreach (var error in result.Errors)
-                {
-                    errorMessage += $"*{error.Description}\n";
-                }
+                this.AddModelErrors(result);
 
                 var userErrorModel = JsonSerializer.Serialize(new UserDto
                 {
@@ -216,7 +203,7 @@ namespace WebUI.Areas.Admin.Controllers
                 var oldUserPicture = oldUser.Picture;
                 if (userUpdateDto.PictureFile != null)
                 {
-                    var imageResult = await _imageHelper.UploadImage(userUpdateDto.UserName, userUpdateDto.PictureFile);
+                    var imageResult = await _imageHelper.UploadImageAsync(userUpdateDto.UserName, userUpdateDto.PictureFile);
                     userUpdateDto.Picture = imageResult.Data.FullName;
                     isNewPictureUploaded = true;
                 }
@@ -241,10 +228,7 @@ namespace WebUI.Areas.Admin.Controllers
                 }
                 else
                 {
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError("", error.Description);
-                    }
+                    this.AddModelErrors(result);
                     var userUpdateErorViewModel = JsonSerializer.Serialize(new UserUpdateAjaxModel
                     {
                         ResultStatus = ResultStatus.Error,
@@ -288,7 +272,7 @@ namespace WebUI.Areas.Admin.Controllers
                 var oldUserPicture = oldUser.Picture;
                 if (userUpdateDto.PictureFile != null)
                 {
-                    var imageResult = await _imageHelper.UploadImage(userUpdateDto.UserName, userUpdateDto.PictureFile);
+                    var imageResult = await _imageHelper.UploadImageAsync(userUpdateDto.UserName, userUpdateDto.PictureFile);
                     userUpdateDto.Picture = imageResult.Data.FullName;
                     if (oldUserPicture != "defaultUser.png")
                     {
@@ -310,10 +294,7 @@ namespace WebUI.Areas.Admin.Controllers
                 }
                 else
                 {
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError("", error.Description);
-                    }
+                    this.AddModelErrors(result);
 
                     return View(userUpdateDto);
                 }
@@ -352,10 +333,7 @@ namespace WebUI.Areas.Admin.Controllers
                     }
                     else
                     {
-                        foreach (var err in result.Errors)
-                        {
-                            ModelState.AddModelError("", err.Description);
-                        }
+                        this.AddModelErrors(result);
                         return View(userPasswordChangeDto);
                     }
                 }

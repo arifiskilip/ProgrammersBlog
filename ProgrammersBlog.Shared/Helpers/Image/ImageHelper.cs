@@ -11,7 +11,7 @@ namespace ProgrammersBlog.Shared.Helpers.Image
     {
         private string _fileDirectory = Environment.CurrentDirectory + "\\wwwroot\\img";
 
-        public async Task<IDataResult<UploadedImageDto>> UploadImage(string userName, IFormFile pictureFile, string folderName="userImages")
+        public async Task<IDataResult<UploadedImageDto>> UploadImageAsync(string userName, IFormFile pictureFile, string folderName="userImages")
         {
             if (!Directory.Exists($"{_fileDirectory}/{folderName}"))
             {

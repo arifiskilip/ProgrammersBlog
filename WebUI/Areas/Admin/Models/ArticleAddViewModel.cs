@@ -1,14 +1,14 @@
 ﻿using ProgrammersBlog.Entities.Concrete;
-using System;
-using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel;
+using System;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 
-namespace ProgrammersBlog.Entities.Dtos
+namespace WebUI.Areas.Admin.Models
 {
-    public class ArticleUpdateDto
+    public class ArticleAddViewModel
     {
-        [Required]
-        public int Id { get; set; }
         [DisplayName("Başlık")]
         [Required(ErrorMessage = "{0} alanı boş geçilmemelidir.")]
         [MaxLength(100, ErrorMessage = "{0} alanı {1} karakterden büyük olmamalıdır.")]
@@ -18,11 +18,7 @@ namespace ProgrammersBlog.Entities.Dtos
         [Required(ErrorMessage = "{0} alanı boş geçilmemelidir.")]
         [MinLength(20, ErrorMessage = "{0} alanı {1} karakterden küçük olmamalıdır.")]
         public string Content { get; set; }
-        [DisplayName("Thumbnail")]
-        [Required(ErrorMessage = "{0} alanı boş geçilmemelidir.")]
-        [MaxLength(250, ErrorMessage = "{0} alanı {1} karakterden büyük olmamalıdır.")]
-        [MinLength(5, ErrorMessage = "{0} alanı {1} karakterden küçük olmamalıdır.")]
-        public string Thumbnail { get; set; }
+        public IFormFile File { get; set; }
         [DisplayName("Tarih")]
         [Required(ErrorMessage = "{0} alanı boş geçilmemelidir.")]
         [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:dd/MM/yyyy}")]
@@ -45,14 +41,9 @@ namespace ProgrammersBlog.Entities.Dtos
         [DisplayName("Kategori")]
         [Required(ErrorMessage = "{0} alanı boş geçilmemelidir.")]
         public int CategoryId { get; set; }
-        public Category Category { get; set; }
+        public IList<Category> Categories { get; set; }
         [DisplayName("Aktif Mi?")]
         [Required(ErrorMessage = "{0} alanı boş geçilmemelidir.")]
         public bool IsActive { get; set; }
-        [DisplayName("Silinsin Mi?")]
-        [Required(ErrorMessage = "{0} alanı boş geçilmemelidir.")]
-        public bool IsDeleted { get; set; }
-        [Required]
-        public int UserId { get; set; }
     }
 }

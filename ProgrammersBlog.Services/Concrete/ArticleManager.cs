@@ -178,5 +178,19 @@ namespace ProgrammersBlog.Services.Concrete
                 return new DataResult<int>(ResultStatus.Error, Messages.Article.NotFound, -1);
             }
         }
+        public async Task<IDataResult<ArticleUpdateDto>> GetArticleDtoAsync(int articleId)
+        {
+            var result = await _unitOfWork.Articles.AnyAsync(c => c.Id == articleId);
+            if (result)
+            {
+                var article = await _unitOfWork.Articles.GetAsync(c => c.Id == articleId);
+                var articleUpdateDto = _mapper.Map<ArticleUpdateDto>(article);
+                return new DataResult<ArticleUpdateDto>(ResultStatus.Success, articleUpdateDto);
+            }
+            else
+            {
+                return new DataResult<ArticleUpdateDto>(ResultStatus.Error, "Böyle bir makale bulunamadı.", null);
+            }
+        }
     }
 }

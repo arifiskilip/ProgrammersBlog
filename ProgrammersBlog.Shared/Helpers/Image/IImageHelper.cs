@@ -7,7 +7,7 @@ namespace ProgrammersBlog.Shared.Helpers.Image
 {
     public interface IImageHelper
     {
-        Task<IDataResult<UploadedImageDto>> UploadImage(string userName, IFormFile pictureFile, string folderName = "userImages");
+        Task<IDataResult<UploadedImageDto>> UploadImageAsync(string userName, IFormFile pictureFile, string folderName = "userImages");
         IResult DeleteImage(string pictureName);
     }
 }

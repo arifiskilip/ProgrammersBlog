@@ -10,12 +10,9 @@ using ProgrammersBlog.Services.Extensions;
 using ProgrammersBlog.Services.Mapper.AutoMapper;
 using ProgrammersBlog.Shared.Helpers.Image;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using WebUI.AutoMapper;
+
 
 namespace WebUI
 {
@@ -35,9 +32,9 @@ namespace WebUI
             {
                 opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); // ===0, 1
                 opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
-            });
+            }).AddNToastNotifyToastr();
             services.AddSession();
-            services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile));
+            services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile), typeof(ViewModelsProfile));
             services.LoadMyServices(Configuration.GetConnectionString("localDb"));
             services.AddScoped<IImageHelper, ImageHelper>();
             services.AddIdentity<User, Role>(options =>
@@ -88,6 +85,7 @@ namespace WebUI
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseNToastNotify();
 
             app.UseEndpoints(endpoints =>
             {

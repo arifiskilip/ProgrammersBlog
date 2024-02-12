@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ProgrammersBlog.Entities.Concrete;
 using ProgrammersBlog.Entities.Dtos;
@@ -14,11 +15,11 @@ namespace WebUI.Areas.Admin.Controllers
 {
     [Area("Admin")]
     [Authorize]
-    public class CategoryController : Controller
+    public class CategoryController : BaseController
     {
         private readonly ICategoryService _categoryService;
 
-        public CategoryController(ICategoryService categoryService)
+        public CategoryController(ICategoryService categoryService, UserManager<User> userManager,SignInManager<User> signInManager, RoleManager<Role> roleManager) : base(userManager,signInManager,roleManager)
         {
             _categoryService = categoryService;
         }
@@ -39,7 +40,7 @@ namespace WebUI.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                var result = await _categoryService.Addv2Async(categoryAddDto, "Arif");
+                var result = await _categoryService.Addv2Async(categoryAddDto, this.CurrentUser.UserName);
                 if (result.ResultStatus == ResultStatus.Success)
                 {
                     var model = JsonSerializer.Serialize(new CategoryViewModel
@@ -61,7 +62,7 @@ namespace WebUI.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            IDataResult<Category> result = await _categoryService.DeleteAsync(id, "Arif İskilip");
+            IDataResult<Category> result = await _categoryService.DeleteAsync(id, CurrentUser.UserName);
 
             var jsonData = JsonSerializer.Serialize(result);
             return Json(jsonData);
@@ -95,7 +96,7 @@ namespace WebUI.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = await _categoryService.UpdateAsync(categoryUpdateDto, "Arif İskilip");
+                var result = await _categoryService.UpdateAsync(categoryUpdateDto, CurrentUser.UserName);
                 if (result.ResultStatus == ResultStatus.Success)
                 {
                     var successCategoryUpdateModel = JsonSerializer.Serialize(new CategoryUpdateViewModel
