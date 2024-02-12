@@ -19,6 +19,7 @@ namespace ProgrammersBlog.Services.Extensions
             serviceCollection.AddScoped<IUow, Uow>();
             serviceCollection.AddScoped<ICategoryService, CategoryManager>();
             serviceCollection.AddScoped<IArticleService, ArticleManager>();
+            serviceCollection.AddScoped<ICommentService, CommentManager>();
             return serviceCollection;
         }
     }

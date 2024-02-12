@@ -2,7 +2,7 @@
 
 namespace ProgrammersBlog.Shared.Results
 {
-    public class DataResult<T> : IDataResult<T> where T : class
+    public class DataResult<T> : IDataResult<T> 
     {
         public T Data { get; set; }
 

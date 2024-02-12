@@ -7,15 +7,17 @@ namespace ProgrammersBlog.Services.Abstract
 {
     public interface ICategoryService
     {
-        Task<IDataResult<CategoryDto>> Get(int categoryId);
-        Task<IDataResult<CategoryListDto>> GetAll();
-        Task<IDataResult<CategoryListDto>> GetAllByNonDeleted();
-        Task<IDataResult<CategoryListDto>> GetAllByNonDeletedAndActive();
-        Task<IDataResult<CategoryDto>> Add(CategoryAddDto categoryAddDto, string createdByName);
-        Task<IDataResult<Category>> Addv2(CategoryAddDto categoryAddDto, string createdByName);
-        Task<IDataResult<CategoryUpdateDto>> Update(CategoryUpdateDto categoryUpdateDto, string modifiedByName);
-        Task<IDataResult<Category>> Delete(int categoryId, string modifiedByName);
-        Task<IDataResult<CategoryDto>> HardDelete(int categoryId);
+        Task<IDataResult<CategoryDto>> GetAsync(int categoryId);
+        Task<IDataResult<CategoryListDto>> GetAllAsync();
+        Task<IDataResult<CategoryListDto>> GetAllByNonDeletedAsync();
+        Task<IDataResult<CategoryListDto>> GetAllByNonDeletedAndActiveAsync();
+        Task<IDataResult<CategoryDto>> AddAsync(CategoryAddDto categoryAddDto, string createdByName);
+        Task<IDataResult<Category>> Addv2Async(CategoryAddDto categoryAddDto, string createdByName);
+        Task<IDataResult<CategoryUpdateDto>> UpdateAsync(CategoryUpdateDto categoryUpdateDto, string modifiedByName);
+        Task<IDataResult<Category>> DeleteAsync(int categoryId, string modifiedByName);
+        Task<IDataResult<CategoryDto>> HardDeleteAsync(int categoryId);
         Task<IDataResult<CategoryUpdateDto>> GetCategoryDtoAsync(int categoryId);
+        Task<IDataResult<int>> CountAsync();
+        Task<IDataResult<int>> CountByNonDeletedAsync();
     }
 }

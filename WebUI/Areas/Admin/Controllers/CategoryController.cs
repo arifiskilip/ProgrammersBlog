@@ -25,7 +25,7 @@ namespace WebUI.Areas.Admin.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var result = await _categoryService.GetAll();
+            var result = await _categoryService.GetAllAsync();
             return View(result);
         }
 
@@ -39,7 +39,7 @@ namespace WebUI.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                var result = await _categoryService.Addv2(categoryAddDto, "Arif");
+                var result = await _categoryService.Addv2Async(categoryAddDto, "Arif");
                 if (result.ResultStatus == ResultStatus.Success)
                 {
                     var model = JsonSerializer.Serialize(new CategoryViewModel
@@ -61,7 +61,7 @@ namespace WebUI.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
-            IDataResult<Category> result = await _categoryService.Delete(id, "Arif İskilip");
+            IDataResult<Category> result = await _categoryService.DeleteAsync(id, "Arif İskilip");
 
             var jsonData = JsonSerializer.Serialize(result);
             return Json(jsonData);
@@ -70,7 +70,7 @@ namespace WebUI.Areas.Admin.Controllers
 
         public async Task<IActionResult> GetAllCategories()
         {
-            var result =await _categoryService.GetAll();
+            var result =await _categoryService.GetAllAsync();
             return Json(JsonSerializer.Serialize(result.Data,new JsonSerializerOptions
             {
                 ReferenceHandler = ReferenceHandler.Preserve
@@ -95,13 +95,13 @@ namespace WebUI.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var result = await _categoryService.Update(categoryUpdateDto, "Arif İskilip");
+                var result = await _categoryService.UpdateAsync(categoryUpdateDto, "Arif İskilip");
                 if (result.ResultStatus == ResultStatus.Success)
                 {
                     var successCategoryUpdateModel = JsonSerializer.Serialize(new CategoryUpdateViewModel
                     {
                         CategoryUpdatePartial = await this.RenderViewToStringAsync("_CategoryUpdatePartial", categoryUpdateDto),
-                        Category = _categoryService.Get(categoryUpdateDto.Id).Result.Data.Category,
+                        Category = _categoryService.GetAsync(categoryUpdateDto.Id).Result.Data.Category,
                         Message = "Güncelleme işlemi başarılı!"
                     });
 
@@ -111,7 +111,7 @@ namespace WebUI.Areas.Admin.Controllers
             var errorCategoryUpdateModel = JsonSerializer.Serialize(new CategoryUpdateViewModel
             {
                 CategoryUpdatePartial = await this.RenderViewToStringAsync("_CategoryUpdatePartial", categoryUpdateDto),
-                Category = _categoryService.Get(categoryUpdateDto.Id).Result.Data.Category,
+                Category = _categoryService.GetAsync(categoryUpdateDto.Id).Result.Data.Category,
                 Message = "Güncelleme işlemi başarısız!"
             });
 

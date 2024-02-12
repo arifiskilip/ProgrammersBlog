@@ -31,9 +31,9 @@ namespace ProgrammersBlog.Shared.Data.Concrete.EntityFramework
             return await _dbSet.AnyAsync(predicate);
         }
 
-        public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate)
+        public async Task<int> CountAsync(Expression<Func<TEntity, bool>> predicate=null)
         {
-            return await _dbSet.CountAsync(predicate);
+            return  await(predicate == null ? _dbSet.CountAsync() : _dbSet.CountAsync(predicate));
         }
 
         public async Task DeleteAsync(TEntity entity)
