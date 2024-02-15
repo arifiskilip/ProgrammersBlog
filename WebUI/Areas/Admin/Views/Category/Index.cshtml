@@ -366,10 +366,12 @@
                             success: function (data) {
                                 const categoryUpdateAjaxModel = jQuery.parseJSON(data);
                                 console.log(categoryUpdateAjaxModel);
-                                const id = categoryUpdateAjaxModel.Category.Id;
-                                const tableRow = $(`[name="row_${id}"]`);
-                                const newFormBody = $('.modal-body', categoryUpdateAjaxModel.CategoryUpdatePartial);
-                                placeHolder.find('.modal-body').replaceWith(newFormBody);
+                                    
+                                    const id = categoryUpdateAjaxModel.Category.Id;
+                                    const tableRow = $(`[name="row_${id}"]`);
+                                    const newFormBody = $('.modal-body', categoryUpdateAjaxModel.CategoryUpdatePartial);
+                                    placeHolder.find('.modal-body').replaceWith(newFormBody);
+                               
                                 const isValid = newFormBody.find('[name="IsValid"]').val() === 'True';
                                 console.log(isValid);
                                 if (isValid) {

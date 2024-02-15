@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -28,13 +29,16 @@ namespace WebUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews().AddRazorRuntimeCompilation().AddJsonOptions(opt =>
+            services.AddControllersWithViews(opt =>
+            {
+                opt.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(value => "Bu alan boþ geçilemez'");
+            }).AddRazorRuntimeCompilation().AddJsonOptions(opt =>
             {
                 opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); // ===0, 1
                 opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
             }).AddNToastNotifyToastr();
             services.AddSession();
-            services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile), typeof(ViewModelsProfile));
+            services.AddAutoMapper(typeof(CategoryProfile), typeof(ArticleProfile), typeof(UserProfile), typeof(ViewModelsProfile), typeof(CommentProfile));
             services.LoadMyServices(Configuration.GetConnectionString("localDb"));
             services.AddScoped<IImageHelper, ImageHelper>();
             services.AddIdentity<User, Role>(options =>
@@ -52,8 +56,8 @@ namespace WebUI
             }).AddEntityFrameworkStores<ProgrammersBlogContext>();
             services.ConfigureApplicationCookie(opt =>
             {
-                opt.LoginPath = new PathString("/Admin/User/Login");
-                opt.LogoutPath = new PathString("/Admin/User/Logout");
+                opt.LoginPath = new PathString("/Admin/Auth/Login");
+                opt.LogoutPath = new PathString("/Admin/Auth/Logout");
                 opt.Cookie = new CookieBuilder
                 {
                     Name = "ProgrammersBlog",
@@ -63,7 +67,11 @@ namespace WebUI
                 };
                 opt.SlidingExpiration = true;
                 opt.ExpireTimeSpan = TimeSpan.FromDays(1);
-                opt.AccessDeniedPath = new PathString("/Admin/User/AccessDenied");
+                opt.AccessDeniedPath = new PathString("/Admin/Auth/AccessDenied");
+            });
+            services.Configure<SecurityStampValidatorOptions>(opt =>
+            {
+                opt.ValidationInterval = TimeSpan.FromMinutes(15);
             });
         }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using ProgrammersBlog.Entities.Concrete;
 
@@ -6,17 +7,15 @@ namespace WebUI.Areas.Admin.Controllers
 {
     public class BaseController : Controller
     {
-        protected readonly UserManager<User> _userManager;
-        protected readonly SignInManager<User> _signInManager;
-        protected readonly RoleManager<Role> _roleManager;
+        protected UserManager<User> UserManager { get; }
+        protected IMapper Mapper { get; }
 
-        protected User CurrentUser => _userManager.GetUserAsync(HttpContext.User).Result;
+        protected User CurrentUser => UserManager.GetUserAsync(HttpContext.User).Result;
 
-        public BaseController(UserManager<User> userManager, SignInManager<User> signInManager, RoleManager<Role> roleManager)
+        public BaseController(UserManager<User> userManager, IMapper mapper)
         {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _roleManager = roleManager;
+            UserManager = userManager;
+            Mapper = mapper;
         }
 
         public void AddModelErrors(IdentityResult result)

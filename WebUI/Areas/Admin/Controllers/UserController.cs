@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,71 +19,36 @@ namespace WebUI.Areas.Admin.Controllers
     [Area("Admin")]
     public class UserController : BaseController
     {
-        private readonly IWebHostEnvironment _env;
-        private readonly IMapper _mapper;
         private readonly IImageHelper _imageHelper;
+        private readonly SignInManager<User> _signInManager;
 
-        public UserController(UserManager<User> userManager, SignInManager<User> signInManager, IWebHostEnvironment env, IMapper mapper, IImageHelper imageHelper, RoleManager<Role> roleManager) : base(userManager,signInManager, roleManager)
+        public UserController(UserManager<User> userManager, IMapper mapper, IImageHelper imageHelper, SignInManager<User> signInManager) : base(userManager, mapper)
         {
-            _env = env;
-            _mapper = mapper;
             _imageHelper = imageHelper;
+            _signInManager = signInManager;
         }
 
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "SuperAdmin,User.Read")]
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var users = await _userManager.Users.ToListAsync();
+            var users = await UserManager.Users.ToListAsync();
             return View(new UserListDto { Users = users,ResultStatus=ResultStatus.Success,Message="Listeleme işlemi başarılı!"});
         }
 
+        [Authorize(Roles = "SuperAdmin,User.Read")]
         [HttpGet]
-        public IActionResult Login()
+        public async Task<PartialViewResult> GetDetail(int userId)
         {
-            return View();
-        }
-        [HttpPost]
-        public async Task<IActionResult> Login(UserLoginDto userLoginDto)
-        {
-            if (ModelState.IsValid)
-            {
-                var checkUser = await _userManager.FindByEmailAsync(userLoginDto.Email);
-                if (checkUser != null)
-                {
-                    var result = await _signInManager.PasswordSignInAsync(checkUser, userLoginDto.Password,userLoginDto.RememberMe,false);
-                    if (result.Succeeded)
-                    {
-                        return RedirectToAction("Index", "Home");
-                    }
-                    else
-                    {
-                        ModelState.AddModelError("", "E-posta adresiniz veya şifreniz yanlıştır.");
-                        return View();
-                    }
-                }
-                else
-                {
-                    ModelState.AddModelError("", "E-posta adresiniz veya şifreniz yanlıştır.");
-                    return View();
-                }
-            }
-            return View();
+            var user = await UserManager.Users.SingleOrDefaultAsync(u => u.Id == userId);
+            return PartialView("_GetDetailPartial", new UserDto { User = user });
         }
 
-        [Authorize]
-        [HttpGet]
-        public async Task<IActionResult> Logout()
-        {
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Index", "Home", new { Area = "" });
-        }
-
-        [Authorize(Roles="Admin")]
+        [Authorize(Roles = "SuperAdmin,User.Read")]
         [HttpGet]
         public async Task<IActionResult> GetAllUsers()
-        {
-            var users = await _userManager.Users.ToListAsync();
+        {   
+            var users = await UserManager.Users.ToListAsync();
             var userListDto = JsonSerializer.Serialize(new UserListDto
             {
                 Users = users,
@@ -98,13 +62,13 @@ namespace WebUI.Areas.Admin.Controllers
             return Json(userListDto);
         }
 
-        [Authorize(Roles ="Admin")]
+        [Authorize(Roles = "SuperAdmin,User.Create")]
         [HttpGet]
         public IActionResult Add()
         {
             return PartialView("_UserAddPartial");
         }
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,User.Create")]
         [HttpPost]
         public async Task<IActionResult> Add(UserAddDto userAddDto)
         {
@@ -112,8 +76,8 @@ namespace WebUI.Areas.Admin.Controllers
             {
                 var imageResult = await _imageHelper.UploadImageAsync(userAddDto.UserName, userAddDto.PictureFile);
                 userAddDto.Picture = imageResult.ResultStatus == ResultStatus.Success ? imageResult.Data.FullName : "userImages/default.png";
-                var user = _mapper.Map<User>(userAddDto);
-                var result = await _userManager.CreateAsync(user, userAddDto.Password);
+                var user = Mapper.Map<User>(userAddDto);
+                var result = await UserManager.CreateAsync(user, userAddDto.Password);
                 if (result.Succeeded)
                 {
                     var userAddAjaxModel = JsonSerializer.Serialize(new UserAddAjaxModel
@@ -145,19 +109,16 @@ namespace WebUI.Areas.Admin.Controllers
             return Json(userAddNotValidError);
         }
 
-        [HttpGet]  //Erişim Yok
-        public ViewResult AccessDenied()
-        {
-            return View();
-        }
-
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,User.Delete")]
+        [HttpPost]
         public async Task<JsonResult> Delete(int userId)
         {
-            var user = await _userManager.FindByIdAsync(userId.ToString());
-            var result = await _userManager.DeleteAsync(user);
+            var user = await UserManager.FindByIdAsync(userId.ToString());
+            var result = await UserManager.DeleteAsync(user);
             if (result.Succeeded)
             {
+                if (user.Picture != "userImages/defaultUser.png")
+                    _imageHelper.DeleteImage(user.Picture);
                 var deletedUser = JsonSerializer.Serialize(new UserDto
                 {
                     User = user,
@@ -184,22 +145,22 @@ namespace WebUI.Areas.Admin.Controllers
         }
 
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,User.Update")]
         [HttpGet]
         public async Task<PartialViewResult> Update(int userId)
         {
-            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
-            var userUpdateDto = _mapper.Map<UserUpdateDto>(user);
+            var user = await UserManager.Users.FirstOrDefaultAsync(u => u.Id == userId);
+            var userUpdateDto = Mapper.Map<UserUpdateDto>(user);
             return PartialView("_UserUpdatePartial", userUpdateDto);
         }
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin,User.Update")]
         [HttpPost]
         public async Task<IActionResult> Update(UserUpdateDto userUpdateDto)
         {
             if (ModelState.IsValid)
             {
                 bool isNewPictureUploaded = false; // Yeni resim ekledi mi ?
-                var oldUser = await _userManager.FindByIdAsync(userUpdateDto.Id.ToString());
+                var oldUser = await UserManager.FindByIdAsync(userUpdateDto.Id.ToString());
                 var oldUserPicture = oldUser.Picture;
                 if (userUpdateDto.PictureFile != null)
                 {
@@ -208,8 +169,8 @@ namespace WebUI.Areas.Admin.Controllers
                     isNewPictureUploaded = true;
                 }
 
-                var updatedUser = _mapper.Map<UserUpdateDto, User>(userUpdateDto, oldUser);
-                var result = await _userManager.UpdateAsync(updatedUser);
+                var updatedUser = Mapper.Map<UserUpdateDto, User>(userUpdateDto, oldUser);
+                var result = await UserManager.UpdateAsync(updatedUser);
                 if (result.Succeeded)
                 {
                     if (isNewPictureUploaded)
@@ -245,7 +206,7 @@ namespace WebUI.Areas.Admin.Controllers
                 var userUpdateModelStateErrorViewModel = JsonSerializer.Serialize(new UserUpdateAjaxModel
                 {
                     Message = $"İşlem Sırasında hata meydana geldi!",
-                    User = _userManager.Users.FirstOrDefaultAsync(x=> x.Id == userUpdateDto.Id).Result,
+                    User = UserManager.Users.FirstOrDefaultAsync(x=> x.Id == userUpdateDto.Id).Result,
                     UserUpdatePartial = await this.RenderViewToStringAsync("_UserUpdatePartial", userUpdateDto)
                 });
                 return Json(userUpdateModelStateErrorViewModel);
@@ -257,8 +218,8 @@ namespace WebUI.Areas.Admin.Controllers
         [HttpGet]
         public async Task<ViewResult> ChangeDetails()
         {
-            var user = await _userManager.GetUserAsync(HttpContext.User);
-            var updateDto = _mapper.Map<UserUpdateDto>(user);
+            var user = await UserManager.GetUserAsync(HttpContext.User);
+            var updateDto = Mapper.Map<UserUpdateDto>(user);
             return View(updateDto);
         }
         [Authorize]
@@ -268,7 +229,7 @@ namespace WebUI.Areas.Admin.Controllers
             if (ModelState.IsValid)
             {
                 bool isNewPictureUploaded = false;
-                var oldUser = await _userManager.GetUserAsync(HttpContext.User);
+                var oldUser = await UserManager.GetUserAsync(HttpContext.User);
                 var oldUserPicture = oldUser.Picture;
                 if (userUpdateDto.PictureFile != null)
                 {
@@ -281,8 +242,8 @@ namespace WebUI.Areas.Admin.Controllers
 
                 }
 
-                var updatedUser = _mapper.Map<UserUpdateDto, User>(userUpdateDto, oldUser);
-                var result = await _userManager.UpdateAsync(updatedUser);
+                var updatedUser = Mapper.Map<UserUpdateDto, User>(userUpdateDto, oldUser);
+                var result = await UserManager.UpdateAsync(updatedUser);
                 if (result.Succeeded)
                 {
                     if (isNewPictureUploaded)
@@ -317,15 +278,15 @@ namespace WebUI.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                var user = await _userManager.GetUserAsync(HttpContext.User);
-                var isVerified = await _userManager.CheckPasswordAsync(user, userPasswordChangeDto.CurrentPassword);
+                var user = await UserManager.GetUserAsync(HttpContext.User);
+                var isVerified = await UserManager.CheckPasswordAsync(user, userPasswordChangeDto.CurrentPassword);
                 if (isVerified)
                 {
-                    var result = await _userManager.ChangePasswordAsync(user, userPasswordChangeDto.CurrentPassword,
+                    var result = await UserManager.ChangePasswordAsync(user, userPasswordChangeDto.CurrentPassword,
                         userPasswordChangeDto.NewPassword);
                     if (result.Succeeded)
                     {
-                        await _userManager.UpdateSecurityStampAsync(user);
+                        await UserManager.UpdateSecurityStampAsync(user);
                         await _signInManager.SignOutAsync();
                         await _signInManager.PasswordSignInAsync(user, userPasswordChangeDto.NewPassword, true, false);
                         TempData.Add("SuccessMessage", $"Şifreniz başarıyla değiştirilmiştir.");

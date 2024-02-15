@@ -2,7 +2,7 @@
 @model ArticleListDto
 @{
     ViewBag.Title = "Makaleler";
-    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
+    Layout = "_Layout";
 }
 <ol class="breadcrumb mb-3 mt-2">
     <li class="breadcrumb-item"><a asp-area="Admin" asp-controller="Home" asp-action="Index">Admin</a></li>
@@ -55,7 +55,7 @@
                 <tbody>
                     @foreach (var article in Model.Articles)
                     {
-                        <tr>
+                        <tr name="row_@article.Id">
                             <td>@article.Id</td>
                             <td>@article.Category.Name</td>
                             <td>@article.Title</td>
@@ -70,9 +70,9 @@
                             <td>@article.ModifiedDate.ToShortDateString()</td>
                             <td>@article.ModifiedByName</td>
                             <td>
-                                <button class="btn btn-sm btn-primary btn-update" data-id="@article.Id">
+                                <a class="btn btn-sm btn-primary btn-update" data-id="@article.Id" asp-area="Admin" asp-controller="Article" asp-action="Update" asp-route-articleId="@article.Id">
                                     <span class="fa fa-solid fa-pen-to-square">Düzenle</span>
-                                </button>
+                                </a>
                                 <button class="btn btn-sm btn-danger btn-delete" data-id="@article.Id">
                                     <span class="fa fa-solid fa-trash-can">Sil</span>
                                 </button>

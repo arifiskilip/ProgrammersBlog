@@ -36,7 +36,7 @@ $(document).ready(function () {
                             const articleResult = jQuery.parseJSON(data);
                             dataTable.clear();
                             console.log(articleResult);
-                            if (articleResult.Data.ResultStatus === 0) {
+                            if (articleResult.Data.ResultStatus === 1) {
                                 let categoriesArray = [];
                                 $.each(articleResult.Data.Articles.$values,
                                     function (index, article) {
@@ -57,22 +57,22 @@ $(document).ready(function () {
                                             newCategory.Name,
                                             newArticle.Title,
                                             `<img src="/img/${newArticle.Thumbnail}" alt="${newArticle.Title}" class="my-image-table" />`,
-                                            `${convertToShortDate(newArticle.Date)}`,
+                                            `${convertShortDate(newArticle.Date)}`,
                                             newArticle.ViewCount,
                                             newArticle.CommentCount,
                                             `${newArticle.IsActive ? "Evet" : "Hayýr"}`,
                                             `${newArticle.IsDeleted ? "Evet" : "Hayýr"}`,
-                                            `${convertToShortDate(newArticle.CreatedDate)}`,
+                                            `${convertShortDate(newArticle.CreatedDate)}`,
                                             newArticle.CreatedByName,
-                                            `${convertToShortDate(newArticle.ModifiedDate)}`,
+                                            `${convertShortDate(newArticle.ModifiedDate)}`,
                                             newArticle.ModifiedByName,
                                             `
-                                <button class="btn btn-primary btn-sm btn-update" data-id="${newArticle.Id}"><span class="fas fa-edit"></span></button>
+                                <a class="btn btn-primary btn-sm btn-update" data-id="${newArticle.Id}" href="/Admin/Article/Update?articleId=${newArticle.Id}"><span class="fas fa-edit"></span></a>
                                 <button class="btn btn-danger btn-sm btn-delete" data-id="${newArticle.Id}"><span class="fas fa-minus-circle"></span></button>
                                             `
                                         ]).node();
                                         const jqueryTableRow = $(newTableRow);
-                                        jqueryTableRow.attr('name', `${newArticle.Id}`);
+                                        jqueryTableRow.attr('name', `row_${newArticle.Id}`);
                                     });
                                 dataTable.draw();
                                 $('.spinner-border').hide();
@@ -132,9 +132,14 @@ $(document).ready(function () {
         '.btn-delete',
         function (event) {
             event.preventDefault();
+
             const id = $(this).attr('data-id');
-            const tableRow = $(`[name="${id}"]`);
+            console.log(id);
+            alert(id);
+            alert("calýstý")
+            const tableRow = $(`[name="row_${id}"]`);
             const articleTitle = tableRow.find('td:eq(2)').text();
+            
             Swal.fire({
                 title: 'Silmek istediðinize emin misiniz?',
                 text: `${articleTitle} baþlýklý makale silinicektir!`,
@@ -153,7 +158,7 @@ $(document).ready(function () {
                         url: '/Admin/Article/Delete/',
                         success: function (data) {
                             const articleResult = jQuery.parseJSON(data);
-                            if (articleResult.ResultStatus === 0) {
+                            if (articleResult.ResultStatus === 1) {
                                 Swal.fire(
                                     'Silindi!',
                                     `${articleResult.Message}`,

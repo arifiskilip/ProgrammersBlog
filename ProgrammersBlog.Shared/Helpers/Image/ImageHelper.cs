@@ -3,7 +3,9 @@ using ProgrammersBlog.Shared.Entities.Abstract;
 using ProgrammersBlog.Shared.Results;
 using System;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace ProgrammersBlog.Shared.Helpers.Image
 {
@@ -17,6 +19,10 @@ namespace ProgrammersBlog.Shared.Helpers.Image
             {
                 Directory.CreateDirectory($"{_fileDirectory}/{folderName}");
             }
+
+            Regex regex = new Regex("[*'\",._&#^@]");
+            userName = regex.Replace(userName, string.Empty);
+
             string fileExtension = Path.GetExtension(pictureFile.FileName);
             string fileName = $"{userName}_{Guid.NewGuid().ToString()}{fileExtension}";
             var path = Path.Combine($"{_fileDirectory}/{folderName}", fileName);

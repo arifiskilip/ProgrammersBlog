@@ -17,7 +17,7 @@ namespace ProgrammersBlog.Data.FluentAPI
             builder.Property(l => l.ProviderKey).HasMaxLength(128);
 
             // Maps to the AspNetUserLogins table
-            builder.ToTable("AspNetUserLogins");
+            builder.ToTable("UserLogins");
         }
     }
 }
