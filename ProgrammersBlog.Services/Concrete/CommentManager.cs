@@ -115,10 +115,14 @@ namespace ProgrammersBlog.Services.Concrete
             var comment = await Uow.Comments.GetAsync(c => c.Id == commentId, c => c.Article);
             if (comment != null)
             {
+                var article = comment.Article;
                 comment.IsActive = true;
                 comment.ModifiedByName = modifiedByName;
                 comment.ModifiedDate = DateTime.Now;
                 var updatedComment = await Uow.Comments.UpdateAsync(comment);
+                article.CommentCount =
+                    await Uow.Comments.CountAsync(c => c.ArticleId == article.Id && !c.IsDeleted);
+                await Uow.Articles.UpdateAsync(article);
                 await Uow.SaveAsync();
                 return new DataResult<CommentDto>(ResultStatus.Success, Messages.Comment.Approve(commentId), new CommentDto
                 {
@@ -131,8 +135,15 @@ namespace ProgrammersBlog.Services.Concrete
 
         public async Task<IDataResult<CommentDto>> AddAsync(CommentAddDto commentAddDto)
         {
+            var article = await Uow.Articles.GetAsync(a => a.Id == commentAddDto.ArticleId);
+            if (article == null)
+            {
+                return new DataResult<CommentDto>(ResultStatus.Error, Messages.Article.NotFound, null);
+            }
             var comment = Mapper.Map<Comment>(commentAddDto);
             var addedComment = await Uow.Comments.AddAsync(comment);
+            article.CommentCount += 1;
+            await Uow.Articles.UpdateAsync(article);
             await Uow.SaveAsync();
             return new DataResult<CommentDto>(ResultStatus.Success, Messages.Comment.Add(commentAddDto.CreatedByName), new CommentDto
             {
@@ -156,14 +167,17 @@ namespace ProgrammersBlog.Services.Concrete
 
         public async Task<IDataResult<CommentDto>> DeleteAsync(int commentId, string modifiedByName)
         {
-            var comment = await Uow.Comments.GetAsync(c => c.Id == commentId);
+            var comment = await Uow.Comments.GetAsync(c => c.Id == commentId, c => c.Article);
             if (comment != null)
             {
+                var article = comment.Article;
                 comment.IsDeleted = true;
                 comment.IsActive = false;
                 comment.ModifiedByName = modifiedByName;
                 comment.ModifiedDate = DateTime.Now;
                 var deletedComment = await Uow.Comments.UpdateAsync(comment);
+                article.CommentCount -= 1;
+                await Uow.Articles.UpdateAsync(article);
                 await Uow.SaveAsync();
                 return new DataResult<CommentDto>(ResultStatus.Success, Messages.Comment.Delete(deletedComment.CreatedByName), new CommentDto
                 {
@@ -178,10 +192,20 @@ namespace ProgrammersBlog.Services.Concrete
 
         public async Task<IResult> HardDeleteAsync(int commentId)
         {
-            var comment = await Uow.Comments.GetAsync(c => c.Id == commentId);
+            var comment = await Uow.Comments.GetAsync(c => c.Id == commentId, c => c.Article);
             if (comment != null)
             {
+                if (comment.IsDeleted)
+                {
+                    await Uow.Comments.DeleteAsync(comment);
+                    await Uow.SaveAsync();
+                    return new Result(ResultStatus.Success, Messages.Comment.HardDelete(comment.CreatedByName));
+                }
+                var article = comment.Article;
                 await Uow.Comments.DeleteAsync(comment);
+                article.CommentCount =
+                    await Uow.Comments.CountAsync(c => c.ArticleId == article.Id && !c.IsDeleted);
+                await Uow.Articles.UpdateAsync(article);
                 await Uow.SaveAsync();
                 return new Result(ResultStatus.Success, Messages.Comment.HardDelete(comment.CreatedByName));
             }
@@ -190,14 +214,17 @@ namespace ProgrammersBlog.Services.Concrete
 
         public async Task<IDataResult<CommentDto>> UndoDeleteAsync(int commentId, string modifiedByName)
         {
-            var comment = await Uow.Comments.GetAsync(c => c.Id == commentId);
+            var comment = await Uow.Comments.GetAsync(c => c.Id == commentId, c => c.Article);
             if (comment != null)
             {
+                var article = comment.Article;
                 comment.IsDeleted = false;
                 comment.IsActive = true;
                 comment.ModifiedByName = modifiedByName;
                 comment.ModifiedDate = DateTime.Now;
                 var deletedComment = await Uow.Comments.UpdateAsync(comment);
+                article.CommentCount += 1;
+                await Uow.Articles.UpdateAsync(article);
                 await Uow.SaveAsync();
                 return new DataResult<CommentDto>(ResultStatus.Success, Messages.Comment.UndoDelete(deletedComment.CreatedByName), new CommentDto
                 {

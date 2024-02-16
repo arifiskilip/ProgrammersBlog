@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using LinqKit;
+using Microsoft.EntityFrameworkCore;
 using ProgrammersBlog.Shared.Data.Abstract;
 using ProgrammersBlog.Shared.Entities.Abstract;
 using System;
@@ -36,6 +37,34 @@ namespace ProgrammersBlog.Shared.Data.Concrete.EntityFramework
             return  await(predicate == null ? _dbSet.CountAsync() : _dbSet.CountAsync(predicate));
         }
 
+        public async Task<IList<TEntity>> SearchAsync(IList<Expression<Func<TEntity, bool>>> predicates, params Expression<Func<TEntity, object>>[] includeProperties)
+        {
+            IQueryable<TEntity> query = _context.Set<TEntity>();
+            if (predicates.Any())
+            {
+                var predicateChain = PredicateBuilder.New<TEntity>();  //LinKit
+                foreach (var predicate in predicates)
+                {
+                    // .Where
+                    // predicate1 && predicate2 && predicate3 && predicateN
+                    // .Or
+                    // predicate1 || predicate2 || predicate3 || predicateN
+                    predicateChain.Or(predicate);
+                }
+
+                query = query.Where(predicateChain);
+            }
+
+            if (includeProperties.Any())
+            {
+                foreach (var includeProperty in includeProperties)
+                {
+                    query = query.Include(includeProperty);
+                }
+            }
+
+            return await query.ToListAsync();
+        }
         public async Task DeleteAsync(TEntity entity)
         {
             await Task.Run(() => { _dbSet.Remove(entity); });

@@ -29,6 +29,11 @@ namespace WebUI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //Mapping
+            services.Configure<AboutUsPageInfo>(Configuration.GetSection("AboutUsPageInfo"));
+            services.Configure<WebsiteInfo>(Configuration.GetSection("WebsiteInfo"));
+
+
             services.AddControllersWithViews(opt =>
             {
                 opt.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(value => "Bu alan boþ geçilemez'");

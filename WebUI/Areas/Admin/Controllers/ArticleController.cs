@@ -67,7 +67,7 @@ namespace WebUI.Areas.Admin.Controllers
                 if (imageResult.ResultStatus == ResultStatus.Success)
                 {
                     articleAddDto.Thumbnail = imageResult.Data.FullName;
-                    var articleResult = await _articleService.AddAsync(articleAddDto,CurrentUser.UserName);
+                    var articleResult = await _articleService.AddAsync(articleAddDto,CurrentUser.UserName,CurrentUser.Id);
                     if (articleResult.ResultStatus == ResultStatus.Success)
                     {
                         _toastNotification.AddSuccessToastMessage(articleResult.Message);
