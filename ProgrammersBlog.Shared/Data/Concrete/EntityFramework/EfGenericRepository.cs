@@ -63,7 +63,7 @@ namespace ProgrammersBlog.Shared.Data.Concrete.EntityFramework
                 }
             }
 
-            return await query.ToListAsync();
+            return await query.AsNoTracking().ToListAsync();
         }
         public async Task DeleteAsync(TEntity entity)
         {
@@ -86,7 +86,7 @@ namespace ProgrammersBlog.Shared.Data.Concrete.EntityFramework
                 }
             }
 
-            return await query.ToListAsync();
+            return await query.AsNoTracking().ToListAsync();
         }
 
         public async Task<TEntity> GetAsync(Expression<Func<TEntity, bool>> predicate, params Expression<Func<TEntity, object>>[] includeProperties)
@@ -105,13 +105,56 @@ namespace ProgrammersBlog.Shared.Data.Concrete.EntityFramework
                 }
             }
 
-            return await query.SingleOrDefaultAsync();
+            return await query.AsNoTracking().SingleOrDefaultAsync();
         }
 
         public async Task<TEntity> UpdateAsync(TEntity entity)
         {
             await Task.Run(() => { _dbSet.Update(entity); });
             return entity;
+        }
+        public async Task<IList<TEntity>> GetAllAsyncV2(IList<Expression<Func<TEntity, bool>>> predicates, IList<Expression<Func<TEntity, object>>> includeProperties)
+        {
+            IQueryable<TEntity> query = _dbSet;
+            if (predicates != null && predicates.Any())
+            {
+                foreach (var predicate in predicates)
+                {
+                    query = query.Where(predicate); // isActive==false && isDeleted==true
+                }
+            }
+
+            if (includeProperties != null && includeProperties.Any())
+            {
+                foreach (var includeProperty in includeProperties)
+                {
+                    query = query.Include(includeProperty);
+                }
+            }
+
+            return await query.AsNoTracking().ToListAsync();
+        }
+
+        public async Task<TEntity> GetAsyncV2(IList<Expression<Func<TEntity, bool>>> predicates, IList<Expression<Func<TEntity, object>>> includeProperties)
+        {
+            IQueryable<TEntity> query = _dbSet;
+            if (predicates != null && predicates.Any())
+            {
+                foreach (var predicate in predicates)
+                {
+                    query = query.Where(predicate); // isActive==false && isDeleted==true
+                }
+            }
+
+            if (includeProperties != null && includeProperties.Any())
+            {
+                foreach (var includeProperty in includeProperties)
+                {
+                    query = query.Include(includeProperty);
+                }
+            }
+
+            return await query.AsNoTracking().SingleOrDefaultAsync();
         }
     }
 }

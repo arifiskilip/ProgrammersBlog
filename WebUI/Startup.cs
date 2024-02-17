@@ -13,7 +13,8 @@ using ProgrammersBlog.Shared.Helpers.Image;
 using System;
 using System.Text.Json.Serialization;
 using WebUI.AutoMapper;
-
+using WebUI.Extensions;
+using WebUI.Filters;
 
 namespace WebUI
 {
@@ -32,11 +33,20 @@ namespace WebUI
             //Mapping
             services.Configure<AboutUsPageInfo>(Configuration.GetSection("AboutUsPageInfo"));
             services.Configure<WebsiteInfo>(Configuration.GetSection("WebsiteInfo"));
+            services.Configure<SmtpSettings>(Configuration.GetSection("SmtpSettings"));
+            services.Configure<ArticleRightSideBarWidgetOptions>(
+                Configuration.GetSection("ArticleRightSideBarWidgetOptions"));
+            services.ConfigureWritable<AboutUsPageInfo>(Configuration.GetSection("AboutUsPageInfo"));
+            services.ConfigureWritable<WebsiteInfo>(Configuration.GetSection("WebsiteInfo"));
+            services.ConfigureWritable<SmtpSettings>(Configuration.GetSection("SmtpSettings"));
+            services.ConfigureWritable<ArticleRightSideBarWidgetOptions>(
+                Configuration.GetSection("ArticleRightSideBarWidgetOptions"));
 
 
             services.AddControllersWithViews(opt =>
             {
                 opt.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(value => "Bu alan boþ geçilemez'");
+               // opt.Filters.Add<MvcExceptionFilter>();
             }).AddRazorRuntimeCompilation().AddJsonOptions(opt =>
             {
                 opt.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); // ===0, 1
@@ -88,10 +98,6 @@ namespace WebUI
                 app.UseDeveloperExceptionPage();
                 app.UseStatusCodePages();
             }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
 
             app.UseSession();
             app.UseStaticFiles();
@@ -106,7 +112,11 @@ namespace WebUI
                     name: "Admin",
                     areaName: "Admin",
                     pattern: "Admin/{controller=Home}/{action=Index}/{id?}");
-
+                endpoints.MapControllerRoute(
+                    name: "article",
+                    pattern: "{title}/{articleId}",
+                    defaults: new { controller = "Article", action = "Detail" }
+                    );
                 endpoints.MapDefaultControllerRoute();
             });
         }

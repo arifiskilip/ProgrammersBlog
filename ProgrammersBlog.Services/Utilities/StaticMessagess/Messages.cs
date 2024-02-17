@@ -2,8 +2,19 @@
 {
     public static class Messages
     {
+        public static class General
+        {
+            public static string ValidationError()
+            {
+                return $"Bir veya daha fazla validasyon hatası ile karşılaşıldı.";
+            }
+        }
         public static class Article
         {
+            public static string NotFoundById(int categoryId)
+            {
+                return $"{categoryId} kategori koduna ait bir kategori bulunamadı.";
+            }
             public static string ArticleNotFound = "Böyle bir makale bulunamadı";
             public static string ArticlesNotFound = "Kayıtlı makaleler mevcut değil!";
             public static string GetArticles = "Makaleler listelendi!";
@@ -56,6 +67,10 @@
         }
         public static class Category
         {
+            public static string NotFoundById(int categoryId)
+            {
+                return $"{categoryId} kategori koduna ait bir kategori bulunamadı.";
+            }
             public static string NotFound(bool isPlural)
             {
                 if (isPlural) return "Hiç bir kategori bulunamadı.";
@@ -82,6 +97,14 @@
             public static string UndoDelete(string categoryName)
             {
                 return $"{categoryName} adlı kategori başarıyla arşivden geri getirilmiştir.";
+            }
+        }
+
+        public static class User
+        {
+            public static string NotFoundById(int userId)
+            {
+                return $"{userId} kullanıcı koduna ait bir kullanıcı bulunamadı.";
             }
         }
     }

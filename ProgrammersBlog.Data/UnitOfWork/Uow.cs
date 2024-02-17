@@ -17,9 +17,9 @@ namespace ProgrammersBlog.Data.UnitOfWork
             _context = context;
         }
 
-        public IArticleRepository Articles => _articleRepository ?? new ArticleRepository(_context);
-        public ICategoryRepository Categories => _categoryRepository ?? new CategoryRepository(_context);
-        public ICommentRepository Comments => _commentRepository ?? new CommentRepository(_context);
+        public IArticleRepository Articles => _articleRepository ??= new ArticleRepository(_context);
+        public ICategoryRepository Categories => _categoryRepository ??= new CategoryRepository(_context);
+        public ICommentRepository Comments => _commentRepository ??= new CommentRepository(_context);
 
 
         public async Task<int> SaveAsync()

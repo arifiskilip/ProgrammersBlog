@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ProgrammersBlog.Shared.Entities.Concrete;
+using System;
+using System.Collections.Generic;
 
 namespace ProgrammersBlog.Shared.Results
 {
@@ -7,6 +9,7 @@ namespace ProgrammersBlog.Shared.Results
         public ResultStatus ResultStatus { get; set; }
         public string Message { get; set; }
         public Exception Exception { get; set; }
+        public IEnumerable<ValidationError> ValidationErrors { get; set; }
     }
 
     public enum ResultStatus
@@ -14,6 +17,8 @@ namespace ProgrammersBlog.Shared.Results
         Success = 1,
         Error = 2,
         Warning = 3,
-        Info = 4
+        Info = 4,
+        Authentication = 5,
+        Authorization = 6
     }
 }
